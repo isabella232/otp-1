@@ -107,7 +107,8 @@ int packet_get_length(enum PacketParseType htype,
 		      unsigned max_plen,      /* Packet max length, 0=no limit */
 		      unsigned trunc_len,     /* Truncate (lines) if longer, 0=no limit */
 		      char     delimiter,     /* Line delimiting character */
-		      int*     statep);       /* Internal protocol state */
+		      int*     statep,        /* Internal protocol state */
+		      match_spec_t *spec);    /* Internal protocol state */
 
 ERTS_GLB_INLINE
 void packet_get_body(enum PacketParseType htype,
@@ -123,6 +124,11 @@ int packet_parse(enum PacketParseType htype,
 		 const char* buf, int len, /* Total packet */
 		 int* statep, PacketCallbacks* pcb, void* arg);
 
+
+typedef struct {
+    unsigned char min_len; /* minimum length required */
+    Uint match_spec[10]; /* 10 fields should be enough for anyone */
+} match_spec_t;
 
 
 /* Internals for the inlines below: */

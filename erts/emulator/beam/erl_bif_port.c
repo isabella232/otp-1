@@ -1350,6 +1350,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
     unsigned max_plen = 0;   /* Packet max length, 0=no limit */
     unsigned trunc_len = 0;  /* Truncate lines if longer, 0=no limit */
     int http_state = 0;      /* 0=request/response 1=header */
+    match_spec_t match_spec = { 0 };
     int packet_sz;           /*-------Binaries involved: ------------------*/
     byte* bin_ptr;           /*| orig: original binary                     */
     byte bin_bitsz;          /*| bin: BIF_ARG_2, may be sub-binary of orig */
@@ -1414,13 +1415,31 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                 }
             } else if (type == TCP_MATCH_SPEC && tpl[0] == make_arityval(2) && tpl[1] == am_match_spec && is_list(tpl[2])) {
                 Eterm* spec = list_val(options);
+                int i = 0;
+                Uint field;
                 while (!is_nil(spec)) {
-                    switch (term_to_Uint(CAR(spec))) {
-                        case am_u8;
+                    term_to_Uint(CAR(spec), &field)
+                    switch (field) {
+                        case am_u8:
+                            match_spec.min_len += 1;
+                            match_spec.match_spec[i] = field;
+                            break;
                         case am_u16;
+                            match_spec.min_len += 2;
+                            match_spec.match_spec[i] = field;
+                            break;
                         case am_u32;
-                        case am_u64;
-                        case varint:
+                            match_spec.min_len += 4;
+                            match_spec.match_spec[i] = field;
+                            break;
+                        case am_varint:
+                            /* varint is at least one byte */
+                            match_spec.min_len += 1;
+                            match_spec.match_spec[i] = field;
+                            break;
+                        default:
+                            BIF_ERROR(BIF_P, BADARG);
+
                     }
                     spec = CDR(spec);
                 }
@@ -1444,7 +1463,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
         pca.aligned_ptr = bin_ptr;
     }
     packet_sz = packet_get_length(type, (char*)pca.aligned_ptr, pca.bin_sz,
-                                  max_plen, trunc_len, delimiter, &http_state);
+                                  max_plen, trunc_len, delimiter, &http_state, &match_spec);
     if (!(packet_sz > 0 && packet_sz <= pca.bin_sz)) {
         if (packet_sz < 0) {
 	    goto error;

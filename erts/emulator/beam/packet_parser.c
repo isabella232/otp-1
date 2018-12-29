@@ -257,7 +257,8 @@ int packet_get_length(enum PacketParseType htype,
                       unsigned max_plen,     /* Max packet length, 0=no limit */
                       unsigned trunc_len,    /* Truncate (lines) if longer, 0=no limit */
                       char     delimiter,    /* Line delimiting character */
-                      int*     statep)       /* Protocol specific state */
+                      int*     statep,       /* Protocol specific state */
+                      match_spec_t *spec)    /* Protocol specific state */
 {
     unsigned hlen, plen;
 
@@ -480,7 +481,34 @@ int packet_get_length(enum PacketParseType htype,
             plen = get_int16(&ptr[3]);
         }
         goto remain;
-    
+
+    case TCP_PB_MATCH_SPEC:
+        if (n < spec->min_len) { goto more; }
+        for (int i = 0; i < 10 && spec->match_spec[i] != 0; i++) {
+            switch (spec->match_spec[i]) {
+                case am_u8:
+                    plen = get_int8(ptr+hlen);
+                    hlen += 1;
+                    break;
+                case am_u16:
+                    plen = get_int16(ptr+hlen);
+                    hlen += 2;
+                    break;
+                case am_u32:
+                    plen = get_int32(ptr+hlen);
+                    hlen += 4;
+                    break;
+                case am_varint:
+                    // parse the varint, increment p and update plen and hlen
+                    // if the varint is incomplete, goto more
+                    // if the varint is invalid, or over 32 bits, return -1
+                    break;
+                default:
+                    return -1;
+            }
+        }
+        goto remain;
+
     default:
         DEBUGF((" => case error\r\n"));
         return -1;
