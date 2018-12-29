@@ -28,6 +28,7 @@
 #endif
 
 #include "packet_parser.h"
+#include "atom.h"
 
 #include <ctype.h>
 #include "sys.h"

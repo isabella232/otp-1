@@ -93,6 +93,10 @@ typedef struct {
     SslTlsFn* ssl_tls;
 }PacketCallbacks;
 
+typedef struct {
+    unsigned char min_len; /* minimum length required */
+    Uint match_spec[10]; /* 10 fields should be enough for anyone */
+} match_spec_t;
 
 /* Called once at emulator start
  */
@@ -123,12 +127,6 @@ ERTS_GLB_INLINE
 int packet_parse(enum PacketParseType htype, 
 		 const char* buf, int len, /* Total packet */
 		 int* statep, PacketCallbacks* pcb, void* arg);
-
-
-typedef struct {
-    unsigned char min_len; /* minimum length required */
-    Uint match_spec[10]; /* 10 fields should be enough for anyone */
-} match_spec_t;
 
 
 /* Internals for the inlines below: */

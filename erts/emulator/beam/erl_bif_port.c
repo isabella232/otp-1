@@ -1413,22 +1413,22 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                         goto next_option;
                     }
                 }
-            } else if (type == TCP_MATCH_SPEC && tpl[0] == make_arityval(2) && tpl[1] == am_match_spec && is_list(tpl[2])) {
-                Eterm* spec = list_val(options);
+            } else if (type == TCP_PB_MATCH_SPEC && tpl[0] == make_arityval(2) && tpl[1] == am_match_spec && is_list(tpl[2])) {
+                Eterm spec = tpl[2];
                 int i = 0;
                 Uint field;
                 while (!is_nil(spec)) {
-                    term_to_Uint(CAR(spec), &field)
+                    term_to_Uint(CAR(list_val(spec)), &field);
                     switch (field) {
                         case am_u8:
                             match_spec.min_len += 1;
                             match_spec.match_spec[i] = field;
                             break;
-                        case am_u16;
+                        case am_u16:
                             match_spec.min_len += 2;
                             match_spec.match_spec[i] = field;
                             break;
-                        case am_u32;
+                        case am_u32:
                             match_spec.min_len += 4;
                             match_spec.match_spec[i] = field;
                             break;
@@ -1441,7 +1441,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                             BIF_ERROR(BIF_P, BADARG);
 
                     }
-                    spec = CDR(spec);
+                    spec = CDR(list_val(spec));
                 }
                 goto next_option;
             }

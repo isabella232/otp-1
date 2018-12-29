@@ -10664,7 +10664,7 @@ static int tcp_remain(tcp_descriptor* desc, int* len)
 
     tlen = packet_get_length(desc->inet.htype, ptr, n, 
                              desc->inet.psize, desc->i_bufsz,
-                             desc->inet.delimiter, &desc->http_state);
+                             desc->inet.delimiter, &desc->http_state, NULL); /* TODO what should I pass here? */
 
     DEBUGF(("tcp_remain(%ld): s=%d, n=%d, nfill=%d nsz=%d, tlen %d\r\n",
 	    (long)desc->inet.port, desc->inet.s, n, nfill, nsz, tlen));
