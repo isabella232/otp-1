@@ -1611,7 +1611,8 @@ type_opt_1(packet) ->
 	   {http_bin, ?TCP_PB_HTTP_BIN},
 	   {httph_bin,?TCP_PB_HTTPH_BIN},
 	   {ssl, ?TCP_PB_SSL_TLS}, % obsolete
-	   {ssl_tls, ?TCP_PB_SSL_TLS}]};
+	   {ssl_tls, ?TCP_PB_SSL_TLS},
+	   {match_spec, ?TCP_PB_MATCH_SPEC}]};
 type_opt_1(line_delimiter)  -> int;
 type_opt_1(mode) ->
     {enum,[{list, ?INET_MODE_LIST},

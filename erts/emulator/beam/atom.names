@@ -682,3 +682,4 @@ atom x86
 atom yes
 atom yield
 atom nifs
+atom u8 u16 u32 u64 varint

@@ -1386,6 +1386,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
     case am_http_bin: type = TCP_PB_HTTP_BIN; break;
     case am_httph_bin: type = TCP_PB_HTTPH_BIN; break;
     case am_ssl_tls: type = TCP_PB_SSL_TLS; break;
+    case am_match_spec: type = TCP_PB_MATCH_SPEC; break;
     default:
         BIF_ERROR(BIF_P, BADARG);
     }
@@ -1411,6 +1412,19 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                         goto next_option;
                     }
                 }
+            } else if (type == TCP_MATCH_SPEC && tpl[0] == make_arityval(2) && tpl[1] == am_match_spec && is_list(tpl[2])) {
+                Eterm* spec = list_val(options);
+                while (!is_nil(spec)) {
+                    switch (term_to_Uint(CAR(spec))) {
+                        case am_u8;
+                        case am_u16;
+                        case am_u32;
+                        case am_u64;
+                        case varint:
+                    }
+                    spec = CDR(spec);
+                }
+                goto next_option;
             }
         }
         BIF_ERROR(BIF_P, BADARG);
