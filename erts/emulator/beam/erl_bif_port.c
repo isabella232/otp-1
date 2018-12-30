@@ -1418,7 +1418,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                 int i = 0;
                 Uint field;
                 while (!is_nil(spec)) {
-                    term_to_Uint(CAR(list_val(spec)), &field);
+                    field = CAR(list_val(spec));
                     switch (field) {
                         case am_u8:
                             match_spec.min_len += 1;
@@ -1441,6 +1441,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                             BIF_ERROR(BIF_P, BADARG);
 
                     }
+                    i++;
                     spec = CDR(list_val(spec));
                 }
                 goto next_option;

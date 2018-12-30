@@ -484,44 +484,52 @@ int packet_get_length(enum PacketParseType htype,
         goto remain;
 
     case TCP_PB_MATCH_SPEC:
+        hlen = 0;
+        plen = 0;
         if (n < spec->min_len) { goto more; }
         // TODO: This should be defined as a constent with match_spec
         for (int i = 0; i < 10 && spec->match_spec[i] != 0; i++) {
             switch (spec->match_spec[i]) {
             case am_u8:
-                plen = get_int8(ptr+hlen);
+                plen = get_int8(&ptr[hlen]);
+                erts_printf("matched u8 %d '%d'\n", plen, (ptr+hlen)[0]);
                 hlen += 1;
                 break;
             case am_u16:
-                plen = get_int16(ptr+hlen);
+                plen = get_int16(&ptr[hlen]);
+                erts_printf("matched u16 %d '%d' '%d'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);
                 hlen += 2;
                 break;
             case am_u32:
-                plen = get_int32(ptr+hlen);
+                plen = get_int32(&ptr[hlen]);
+                erts_printf("matched u32 %d '%c' '%d' '%d' '%d'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);
                 hlen += 4;
                 break;
-            case am_varint: {
-                unsigned long value = 0;
-                int shift = 0;
-                int index = 0;
-                do {
-                    if (index > 3)
-                        // if the varint is invalid, or over 32 bits, return -1
-                        goto error; // limit to 32 bits
-                    if (n < (hlen + index))
-                        // if the varint is incomplete, goto more
-                        goto more;
-                    value |= (ptr[hlen + index] & 0x7F) << shift;
-                    shift += 7;
-                    index += 1;
-                } while(ptr[hlen + index] & 0x80);
-                plen = value;
-                hlen += index;
-            } break;
+            case am_varint:
+                {
+                    unsigned long value = 0;
+                    int shift = 0;
+                    int index = 0;
+                    do {
+                        if (index > 3)
+                            // if the varint is invalid, or over 32 bits, return -1
+                            goto error; // limit to 32 bits
+                        if (n < (hlen + index))
+                            // if the varint is incomplete, goto more
+                            goto more;
+                        value |= (ptr[hlen + index] & 0x7F) << shift;
+                        shift += 7;
+                        index += 1;
+                    } while(ptr[hlen + index] & 0x80);
+                    plen = value;
+                    hlen += index;
+                }
+                break;
             default:
-                    return -1;
+                return -1;
             }
         }
+        erts_printf("hlen %d, plen %d\n", hlen, plen);
         goto remain;
 
     default:

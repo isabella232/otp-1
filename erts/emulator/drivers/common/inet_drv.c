@@ -1297,6 +1297,7 @@ struct _tcp_descriptor {
     int           i_remain;     /* remaining chars to read */
     int           tcp_add_flags;/* Additional TCP descriptor flags */
     int           http_state;   /* 0 = response|request  1=headers fields */
+    match_spec_t  spec;
     inet_async_multi_op *multi_first;/* NULL == no multi-accept-queue, op is in ordinary queue */
     inet_async_multi_op *multi_last;
     MultiTimerData *mtd;       /* Timer structures for multiple accept */
