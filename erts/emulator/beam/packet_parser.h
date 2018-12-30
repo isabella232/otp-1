@@ -95,7 +95,7 @@ typedef struct {
 
 typedef struct {
     unsigned char min_len; /* minimum length required */
-    Uint match_spec[10]; /* 10 fields should be enough for anyone */
+    unsigned char match_spec[10]; /* 10 fields should be enough for anyone */
 } match_spec_t;
 
 /* Called once at emulator start

@@ -1422,22 +1422,28 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                     switch (field) {
                         case am_u8:
                             match_spec.min_len += 1;
-                            match_spec.match_spec[i] = field;
+                            match_spec.match_spec[i] = 8;
                             break;
                         case am_u16:
+                            match_spec.min_len += 2;
+                            match_spec.match_spec[i] = 16;
+                            break;
                         case am_u16le:
                             match_spec.min_len += 2;
-                            match_spec.match_spec[i] = field;
+                            match_spec.match_spec[i] = 17;
                             break;
                         case am_u32:
+                            match_spec.min_len += 4;
+                            match_spec.match_spec[i] = 32;
+                            break;
                         case am_u32le:
                             match_spec.min_len += 4;
-                            match_spec.match_spec[i] = field;
+                            match_spec.match_spec[i] = 33;
                             break;
                         case am_varint:
                             /* varint is at least one byte */
                             match_spec.min_len += 1;
-                            match_spec.match_spec[i] = field;
+                            match_spec.match_spec[i] = 1;
                             break;
                         default:
                             BIF_ERROR(BIF_P, BADARG);

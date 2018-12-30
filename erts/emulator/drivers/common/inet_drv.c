@@ -784,6 +784,7 @@ static size_t my_strnlen(const char *s, size_t maxlen)
 #define UDP_OPT_ADD_MEMBERSHIP 14 /* add an IP group membership */
 #define UDP_OPT_DROP_MEMBERSHIP 15 /* drop an IP group membership */
 #define INET_OPT_IPV6_V6ONLY 16 /* IPv6 only socket, no mapped v4 addrs */
+#define INET_OPT_MATCH_SPEC 17
 /* LOPT is local options */
 #define INET_LOPT_BUFFER      20  /* min buffer size hint */
 #define INET_LOPT_HEADER      21  /* list header size */
@@ -1297,11 +1298,11 @@ struct _tcp_descriptor {
     int           i_remain;     /* remaining chars to read */
     int           tcp_add_flags;/* Additional TCP descriptor flags */
     int           http_state;   /* 0 = response|request  1=headers fields */
-    match_spec_t  spec;
     inet_async_multi_op *multi_first;/* NULL == no multi-accept-queue, op is in ordinary queue */
     inet_async_multi_op *multi_last;
     MultiTimerData *mtd;       /* Timer structures for multiple accept */
     MultiTimerData *mtd_cache; /* A cache for timer allocations */
+    match_spec_t  spec;
 #ifdef HAVE_SENDFILE
     struct {
         ErlDrvSizeT ioq_skip;   /* The number of bytes in the queue at the time
@@ -6693,6 +6694,59 @@ static int inet_set_opts(inet_descriptor* desc, char* ptr, int len)
 	    continue;
 #endif
 
+	case INET_OPT_MATCH_SPEC:
+      if (desc->sprotocol == IPPROTO_TCP) {
+          int i = 0;
+          tcp_descriptor *tdesc = (tcp_descriptor *) desc;
+          /*erts_printf("socket type %u\n", tdesc->inet.htype);*/
+          tdesc->spec.min_len = 0;
+          /*erts_printf("match spec data ");*/
+          for (i = 0; i < len && 0 != (unsigned char) ptr[i+1]; i++) {
+              switch (get_int8(ptr)) {
+                  case 1:
+                      /*erts_printf("varint ");*/
+                      tdesc->spec.min_len += 1;
+                      tdesc->spec.match_spec[i] = 1;
+                      break;
+                  case 8:
+                      /*erts_printf("u8 ");*/
+                      tdesc->spec.min_len += 1;
+                      tdesc->spec.match_spec[i] = 8;
+                      break;
+                  case 16:
+                      /*erts_printf("u16 ");*/
+                      tdesc->spec.min_len += 2;
+                      tdesc->spec.match_spec[i] = 16;
+                      break;
+                  case 17:
+                      /*erts_printf("u16le ");*/
+                      tdesc->spec.min_len += 2;
+                      tdesc->spec.match_spec[i] = 17;
+                      break;
+                  case 32:
+                      /*erts_printf("u32 ");*/
+                      tdesc->spec.min_len += 4;
+                      tdesc->spec.match_spec[i] = 32;
+                      break;
+                  case 33:
+                      /*erts_printf("u32le ");*/
+                      tdesc->spec.min_len += 4;
+                      tdesc->spec.match_spec[i] = 33;
+                      break;
+                  default:
+                      return -1;
+              }
+              ptr++;
+              len--;
+          }
+          /*erts_printf("\n");*/
+          tdesc->spec.match_spec[i] = 0;
+          /*erts_printf("min size %u, i %u\n", tdesc->spec.min_len, i);*/
+          ptr++;
+          len--;
+      }
+      break;
+
 	case INET_OPT_RAW:
 	    if (len < 8) {
 		return -1;
@@ -10665,7 +10719,7 @@ static int tcp_remain(tcp_descriptor* desc, int* len)
 
     tlen = packet_get_length(desc->inet.htype, ptr, n, 
                              desc->inet.psize, desc->i_bufsz,
-                             desc->inet.delimiter, &desc->http_state, NULL); /* TODO what should I pass here? */
+                             desc->inet.delimiter, &desc->http_state, &desc->spec);
 
     DEBUGF(("tcp_remain(%ld): s=%d, n=%d, nfill=%d nsz=%d, tlen %d\r\n",
 	    (long)desc->inet.port, desc->inet.s, n, nfill, nsz, tlen));

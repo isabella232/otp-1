@@ -28,7 +28,6 @@
 #endif
 
 #include "packet_parser.h"
-#include "atom.h"
 
 #include <ctype.h>
 #include "sys.h"
@@ -484,38 +483,40 @@ int packet_get_length(enum PacketParseType htype,
         goto remain;
 
     case TCP_PB_MATCH_SPEC:
+        /*erts_printf("tcp match spec, len %u, first %u\n", spec->min_len, spec->match_spec[0]);*/
         hlen = 0;
         plen = 0;
         if (n < spec->min_len) { goto more; }
         // TODO: This should be defined as a constent with match_spec
         for (int i = 0; i < 10 && spec->match_spec[i] != 0; i++) {
+            /*erts_printf("match spec %u %u\n", i, spec->match_spec[i]);*/
             switch (spec->match_spec[i]) {
-            case am_u8:
+            case 8:
                 plen = get_int8(&ptr[hlen]);
-                erts_printf("matched u8 %u '%u'\n", plen, (ptr+hlen)[0]);
+                /*erts_printf("matched u8 %u '%u'\n", plen, (ptr+hlen)[0]);*/
                 hlen += 1;
                 break;
-            case am_u16:
+            case 16:
                 plen = get_int16(&ptr[hlen]);
-                erts_printf("matched u16 %u '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);
+                /*erts_printf("matched u16 %u '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);*/
                 hlen += 2;
                 break;
-            case am_u16le:
+            case 17:
                 plen = get_int16le(&ptr[hlen]);
-                erts_printf("matched u16le %u '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);
+                /*erts_printf("matched u16le %u '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);*/
                 hlen += 2;
                 break;
-            case am_u32:
+            case 32:
                 plen = get_int32(&ptr[hlen]);
-                erts_printf("matched u32 %u '%u' '%u' '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);
+                /*erts_printf("matched u32 %u '%u' '%u' '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);*/
                 hlen += 4;
                 break;
-            case am_u32le:
+            case 33:
                 plen = get_int32le(&ptr[hlen]);
-                erts_printf("matched u32le %u '%u' '%u' '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);
+                /*erts_printf("matched u32le %u '%u' '%u' '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);*/
                 hlen += 4;
                 break;
-            case am_varint:
+            case 1:
                 {
                     unsigned long value = 0;
                     int shift = 0;
@@ -530,16 +531,18 @@ int packet_get_length(enum PacketParseType htype,
                         value |= (ptr[hlen + index] & 0x7F) << shift;
                         shift += 7;
                         index += 1;
+                        /*erts_printf("value %u, shift %d, index %d\n", value, shift, index);*/
                     } while(ptr[hlen + index] & 0x80);
                     plen = value;
                     hlen += index;
                 }
                 break;
             default:
+                /*erts_printf("unknown atom %u", spec->match_spec[i]);*/
                 return -1;
             }
         }
-        erts_printf("hlen %d, plen %d\n", hlen, plen);
+        /*erts_printf("hlen %d, plen %d\n", hlen, plen);*/
         goto remain;
 
     default:

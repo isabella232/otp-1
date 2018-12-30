@@ -1582,6 +1582,7 @@ type_opt_1(recvttl)         -> bool;
 type_opt_1(nodelay)         -> bool;
 type_opt_1(nopush)          -> bool;
 type_opt_1(ipv6_v6only)     -> bool;
+type_opt_1(match_spec)      -> match_spec;
 %% multicast
 type_opt_1(multicast_ttl)   -> int;
 type_opt_1(multicast_loop)  -> bool;
@@ -1905,6 +1906,8 @@ type_value_2(binary_or_uint,Int)
 %% Type-checking of SCTP options
 type_value_2(sctp_assoc_id, X)
   when X band 16#ffffffff =:= X                     -> true;
+type_value_2(match_spec, Spec) ->
+    lists:all(fun(E) -> lists:member(E, [u8, u16, u16le, u32, u32le, varint]) end, Spec);
 type_value_2(_, _)         -> false.
 
 
@@ -2158,6 +2161,15 @@ enc_opt_val([{active,N}|Opts], Acc) when is_integer(N), N < 32768, N >= -32768 -
     enc_opt_val(Opts, [<<?INET_LOPT_ACTIVE:8,?INET_MULTI:32,N:16>>|Acc]);
 enc_opt_val([{raw,P,O,B}|Opts], Acc) ->
     enc_opt_val(Opts, Acc, raw, {P,O,B});
+enc_opt_val([{match_spec, Specs}|Opts], Acc) ->
+    EncSpecs = lists:map(fun(u8) -> <<8:8>>;
+                            (u16) -> <<16:8>>;
+                            (u16le) -> <<17:8>>;
+                            (u32) -> <<32:8>>;
+                            (u32le) -> <<33:8>>;
+                            (varint) -> <<1:8>>
+                         end, Specs) ++ <<0:8>>,
+    enc_opt_val(Opts, [list_to_binary([<<?INET_OPT_MATCH_SPEC:8, 0:32>>|EncSpecs])|Acc]);
 enc_opt_val([{Opt,Val}|Opts], Acc) ->
     enc_opt_val(Opts, Acc, Opt, Val);
 enc_opt_val([binary|Opts], Acc) ->
