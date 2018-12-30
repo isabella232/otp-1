@@ -1425,10 +1425,12 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                             match_spec.match_spec[i] = field;
                             break;
                         case am_u16:
+                        case am_u16le:
                             match_spec.min_len += 2;
                             match_spec.match_spec[i] = field;
                             break;
                         case am_u32:
+                        case am_u32le:
                             match_spec.min_len += 4;
                             match_spec.match_spec[i] = field;
                             break;

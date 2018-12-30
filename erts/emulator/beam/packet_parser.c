@@ -492,17 +492,27 @@ int packet_get_length(enum PacketParseType htype,
             switch (spec->match_spec[i]) {
             case am_u8:
                 plen = get_int8(&ptr[hlen]);
-                erts_printf("matched u8 %d '%d'\n", plen, (ptr+hlen)[0]);
+                erts_printf("matched u8 %u '%u'\n", plen, (ptr+hlen)[0]);
                 hlen += 1;
                 break;
             case am_u16:
                 plen = get_int16(&ptr[hlen]);
-                erts_printf("matched u16 %d '%d' '%d'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);
+                erts_printf("matched u16 %u '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);
+                hlen += 2;
+                break;
+            case am_u16le:
+                plen = get_int16le(&ptr[hlen]);
+                erts_printf("matched u16le %u '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1]);
                 hlen += 2;
                 break;
             case am_u32:
                 plen = get_int32(&ptr[hlen]);
-                erts_printf("matched u32 %d '%c' '%d' '%d' '%d'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);
+                erts_printf("matched u32 %u '%u' '%u' '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);
+                hlen += 4;
+                break;
+            case am_u32le:
+                plen = get_int32le(&ptr[hlen]);
+                erts_printf("matched u32le %u '%u' '%u' '%u' '%u'\n", plen, (ptr+hlen)[0], (ptr+hlen)[1], (ptr+hlen)[2], (ptr+hlen)[3]);
                 hlen += 4;
                 break;
             case am_varint:
