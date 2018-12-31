@@ -522,7 +522,7 @@ int packet_get_length(enum PacketParseType htype,
                     int shift = 0;
                     int index = 0;
                     do {
-                        if (index > 3)
+                        if (index > 5)
                             // if the varint is invalid, or over 32 bits, return -1
                             goto error; // limit to 32 bits
                         if (n < (hlen + index))
@@ -530,9 +530,8 @@ int packet_get_length(enum PacketParseType htype,
                             goto more;
                         value |= (ptr[hlen + index] & 0x7F) << shift;
                         shift += 7;
-                        index += 1;
                         /*erts_printf("value %u, shift %d, index %d\n", value, shift, index);*/
-                    } while(ptr[hlen + index] & 0x80);
+                    } while(ptr[hlen + index++] & 0x80);
                     plen = value;
                     hlen += index;
                 }
